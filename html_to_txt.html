@@ -3,50 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML File Processor</title>
+    <title>File Display and Download</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+        }
+        .file-content {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            background-color: #f9f9f9;
+            font-family: monospace;
+        }
+        .download-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            font-size: 16px;
+            color: #fff;
+            background-color: #007bff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .download-btn:hover {
+            background-color: #0056b3;
+        }
+        .file-input {
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Upload HTML File</h1>
-    <input type="file" id="fileInput" accept=".html">
-    <button onclick="processFile()">Process File</button>
-    <a id="downloadLink" style="display:none;">Download TXT</a>
-    
+    <div class="container">
+        <h1>Upload and Display File</h1>
+        <input type="file" id="fileInput" class="file-input" />
+        <div id="fileContent" class="file-content">
+            Select a file to display its content here...
+        </div>
+        <a id="downloadLink" class="download-btn" href="#" download>Download File</a>
+    </div>
+
     <script>
-        function processFile() {
-            const fileInput = document.getElementById('fileInput');
-            const downloadLink = document.getElementById('downloadLink');
-            
-            if (fileInput.files.length === 0) {
-                alert('Please select a file.');
-                return;
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    document.getElementById('fileContent').textContent = content;
+                    
+                    // Create a Blob URL for download
+                    const blob = new Blob([content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    document.getElementById('downloadLink').href = url;
+                    document.getElementById('downloadLink').download = file.name;
+                };
+                reader.readAsText(file);
+            } else {
+                document.getElementById('fileContent').textContent = 'No file selected.';
             }
-            
-            const file = fileInput.files[0];
-            const reader = new FileReader();
-            
-            reader.onload = function(event) {
-                const htmlContent = event.target.result;
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlContent, 'text/html');
-                const buttons = doc.querySelectorAll('button.download-btn');
-                
-                let output = '';
-                buttons.forEach(button => {
-                    const link = button.getAttribute('onclick').split("'")[1];
-                    const text = button.closest('tr').querySelector('td').innerText.trim();
-                    output += `${text} ${link}\n`;
-                });
-                
-                const blob = new Blob([output], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                downloadLink.href = url;
-                downloadLink.download = 'output.txt';
-                downloadLink.style.display = 'inline';
-                downloadLink.textContent = 'Download output.txt';
-            };
-            
-            reader.readAsText(file);
-        }
+        });
     </script>
 </body>
 </html>
